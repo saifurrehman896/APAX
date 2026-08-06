@@ -1,6 +1,7 @@
 'use client'
 
 import { create } from 'zustand'
+import { fetchHoldingsApi } from './services/holdings.api'
 
 // Types
 export interface MetalPrice {
@@ -49,6 +50,11 @@ interface APAXStore {
   // User Holdings
   userHoldings: UserHolding
   setUserHoldings: (holdings: UserHolding) => void
+
+  // Holdings fetch state
+  isLoadingHoldings: boolean
+  holdingsError: string | null
+  fetchHoldings: () => Promise<void>
   
   // Vault Data
   vaultData: VaultData
@@ -62,6 +68,10 @@ interface APAXStore {
   zakatCalculation: ZakatCalculation | null
   calculateZakat: () => void
   
+  // Auth state
+  isAuthenticated: boolean
+  setIsAuthenticated: (value: boolean) => void
+
   // UI State
   activeView: 'dashboard' | 'por' | 'zakat' | 'redemption' | 'sharia'
   setActiveView: (view: 'dashboard' | 'por' | 'zakat' | 'redemption' | 'sharia') => void
@@ -137,6 +147,31 @@ export const useAPAXStore = create<APAXStore>((set, get) => ({
   // User Holdings
   userHoldings: initialUserHoldings,
   setUserHoldings: (holdings) => set({ userHoldings: holdings }),
+
+  // Holdings fetch state
+  isLoadingHoldings: false,
+  holdingsError: null,
+  fetchHoldings: async () => {
+    set({ isLoadingHoldings: true, holdingsError: null })
+    const res = await fetchHoldingsApi()
+    if (res.success && res.data) {
+      set({
+        userHoldings: {
+          goldGrams: res.data.gold.amountGrams,
+          silverGrams: res.data.silver.amountGrams,
+          platinumGrams: res.data.platinum.amountGrams,
+          // apxiTokens stays as-is until a separate token-balance API exists
+          apxiTokens: get().userHoldings.apxiTokens,
+        },
+        isLoadingHoldings: false,
+      })
+    } else {
+      set({
+        isLoadingHoldings: false,
+        holdingsError: res.message ?? 'Failed to load holdings',
+      })
+    }
+  },
   
   // Vault Data
   vaultData: initialVaultData,
@@ -179,7 +214,11 @@ export const useAPAXStore = create<APAXStore>((set, get) => ({
   
   // UI State
   activeView: 'dashboard',
-  setActiveView: (view) => set({ activeView: view })
+  setActiveView: (view) => set({ activeView: view }),
+
+  // Auth state
+  isAuthenticated: false,
+  setIsAuthenticated: (value) => set({ isAuthenticated: value }),
 }))
 
 // Utility function to format currency

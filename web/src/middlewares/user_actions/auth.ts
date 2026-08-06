@@ -1,15 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import User from "../../models/userModel";
+import User, { IUser } from "../../models/userModel";
 import ErrorHandler from "../../utils/errorHandler";
 import asyncErrorHandler from "../helpers/asyncErrorHandler";
 
 /**
- * Extend Express Request to include user
- * (Ideally place this in a global typings file)
+ * Extend Express Request to include user typed as IUser.
  */
 export interface AuthenticatedRequest extends Request {
-  user?: any; // replace `any` with IUser if you have a User interface
+  user?: IUser;
 }
 
 interface DecodedToken extends JwtPayload {

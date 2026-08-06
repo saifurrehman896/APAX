@@ -20,26 +20,25 @@ export default function LoginPage() {
   const [vaultOpening, setVaultOpening] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    // setIsLoading(true)
+    setErrorMessage(null)
+    setIsLoading(true)
+
     const res = await loginApi({ email, password })
-    console.log(res)
-    //NEED TO CLEAN UP ONCE ALL DONE, didn't get time due to mongodb connection issue.
-    // Simulate authentication delay
-    // await new Promise(resolve => setTimeout(resolve, 1000))
 
-    // Trigger vault door animation
-    // setVaultOpening(true)
-
-    // Navigate after animation
-    // await new Promise(resolve => setTimeout(resolve, 1000))
-    // router.push('/dashboard')
-    if(res.data) {
-      router.push('/dashbaord')
+    if (res.success) {
+      // JWT is set as an httpOnly cookie by the server — no need to store it.
+      // Trigger vault door animation, then navigate.
+      setIsLoading(false)
+      setVaultOpening(true)
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      router.push('/dashboard')
     } else {
-      alert('Something went wrong')
+      setIsLoading(false)
+      setErrorMessage(res.message ?? 'Login failed. Please check your credentials.')
     }
   }
 
@@ -254,6 +253,14 @@ export default function LoginPage() {
                   </label>
                   <a href="#" className="text-[#D4AF37] hover:text-[#E6C861]">Forgot password?</a>
                 </div>
+
+                {/* Error message — shown on failed login */}
+                {errorMessage && (
+                  <div className="rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-400 flex items-start gap-2">
+                    <span className="mt-0.5">⚠</span>
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
 
                 <Button
                   type="submit"

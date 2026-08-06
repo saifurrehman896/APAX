@@ -83,6 +83,17 @@ userSchema.pre<IUser>("save", async function (next) {
 
 
 /**
+ * Generate JWT token
+ */
+userSchema.methods.getJWTToken = function (): string {
+  return jwt.sign(
+    { id: this._id, email: this.email },
+    process.env.JWT_SECRET as string,
+    { expiresIn: process.env.JWT_EXPIRE ?? "7d" } as jwt.SignOptions
+  );
+};
+
+/**
  * Compare password
  */
 userSchema.methods.comparePassword = async function (
