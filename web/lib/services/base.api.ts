@@ -16,6 +16,9 @@ export const baseAPI = async (url: string, method: any, body?: unknown) => {
       headers: {
         'Content-Type': 'application/json',
       },
+      // Required so the browser sends the httpOnly JWT cookie on every request.
+      // The backend CORS config must allow credentials from this origin.
+      credentials: 'include',
       body: method !== 'GET' && body ? JSON.stringify(body) : undefined,
     });
 

